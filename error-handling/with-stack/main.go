@@ -24,14 +24,30 @@ func (e *withStack) Unwrap() error {
 	return e.err
 }
 
-func WithStack(err error) error {
+func wrapStack(err error, override bool) error {
+	if !override {
+		var ws *withStack
+		if errors.As(err, &ws) {
+			// already wrapped
+			return err
+		}
+	}
+
 	var pc [maxDepth]uintptr
-	// skip runtime.Callers, WithStack
-	n := runtime.Callers(2, pc[:])
+	// skip runtime.Callers, WithStack|WithStackOverride, wrapStack
+	n := runtime.Callers(3, pc[:])
 	return &withStack{
 		err: err,
 		pc:  pc[:n],
 	}
+}
+
+func WithStack(err error) error {
+	return wrapStack(err, false)
+}
+
+func WithStackOverride(err error) error {
+	return wrapStack(err, true)
 }
 
 func Frames(err error) iter.Seq[runtime.Frame] {
@@ -64,26 +80,6 @@ func PrintStack(w io.Writer, err error) error {
 	return nil
 }
 
-func main() {
-	sample := errors.New("sample")
-
-	wrapped := example(sample)
-
-	fmt.Printf("%v\n", wrapped) // sample
-	err := PrintStack(os.Stdout, wrapped)
-	if err != nil {
-		panic(err)
-	}
-	/*
-		main.frames(github.com/ngicks/go-example-basics-revisited/error-handling/with-stack/main.go:91)
-		main.calling(github.com/ngicks/go-example-basics-revisited/error-handling/with-stack/main.go:87)
-		main.deep(github.com/ngicks/go-example-basics-revisited/error-handling/with-stack/main.go:83)
-		main.example(github.com/ngicks/go-example-basics-revisited/error-handling/with-stack/main.go:79)
-		main.main(github.com/ngicks/go-example-basics-revisited/error-handling/with-stack/main.go:70)
-		runtime.main(runtime/proc.go:272)
-	*/
-}
-
 func example(err error) error {
 	return deep(err)
 }
@@ -98,4 +94,24 @@ func calling(err error) error {
 
 func frames(err error) error {
 	return WithStack(err)
+}
+
+func main() {
+	sample := errors.New("sample")
+
+	wrapped := example(sample)
+
+	fmt.Printf("%v\n", wrapped) // sample
+	err := PrintStack(os.Stdout, wrapped)
+	if err != nil {
+		panic(err)
+	}
+	/*
+		main.frames(github.com/ngicks/go-example-basics-revisited/error-handling/with-stack/main.go:96)
+		main.calling(github.com/ngicks/go-example-basics-revisited/error-handling/with-stack/main.go:92)
+		main.deep(github.com/ngicks/go-example-basics-revisited/error-handling/with-stack/main.go:88)
+		main.example(github.com/ngicks/go-example-basics-revisited/error-handling/with-stack/main.go:84)
+		main.main(github.com/ngicks/go-example-basics-revisited/error-handling/with-stack/main.go:102)
+		runtime.main(runtime/proc.go:272)
+	*/
 }
