@@ -16,7 +16,9 @@ func main() {
 func wrapSingleVal() {
 	err := fmt.Errorf("foo")
 
-	wrapped := fmt.Errorf("bar: %w", err)
+	wrapped := fmt.Errorf("bar: %w, param1 = %d, param2 = %.2f", err, 10, 0.1234)
+
+	fmt.Printf("err = %v\n\n", wrapped) // err = bar: foo, param1 = 10, param2 = 0.12
 
 	fmt.Printf("not same = %t\n", err == wrapped)                // not same = false
 	fmt.Printf("but is wrapped = %t\n", errors.Is(wrapped, err)) // but is wrapped = true
