@@ -90,7 +90,9 @@ func main() {
 			}
 		}
 	}()
-	example(context.Background())
+	ctx, cancel := context.WithCancel(context.Background())
+	defer cancel() // canaled after occurrence of panic
+	example(ctx)
 	//nolint
 	// panicked: panicked: runtime error: index out of range [4] with length 2
 	//     main.main.func1(github.com/ngicks/go-example-basics-revisited/error-handling/log-stacktrace/main.go:80)
