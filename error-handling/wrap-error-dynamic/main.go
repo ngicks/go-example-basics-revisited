@@ -23,7 +23,7 @@ func main() {
 	errs := []any{err1, err2, err3}
 
 	const sep = ", "
-	format, _ := strings.CutSuffix(strings.Repeat("%w"+sep, len(errs)), sep)
+	format := strings.TrimSuffix(strings.Repeat("%w"+sep, len(errs)), sep)
 	wrapped := fmt.Errorf("foobar error: "+format, errs...)
 
 	fmt.Printf("err = %v\n", wrapped) // err = foobar error: 1, 2, 3
