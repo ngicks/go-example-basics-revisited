@@ -1,0 +1,15 @@
+{
+  "tasks": {
+    "quack": "deno eval 'console.log(\"quack\")'",
+    "run": {
+      "command": "go run ./cmd/example",
+      "dependencies": ["quack"]
+    }
+  },
+  "imports": {
+    "#/": "./script/",
+    "@david/dax": "jsr:@david/dax@^0.43.0",
+    "@std/crypto": "jsr:@std/crypto@^1.0.4",
+    "@std/encoding": "jsr:@std/encoding@^1.0.10"
+  }
+}

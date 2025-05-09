@@ -1,0 +1,19 @@
+# https://taskfile.dev
+
+version: '3'
+
+vars:
+  GREETING: Hello, World!
+
+tasks:
+  default:
+    cmds:
+      - echo "{{index .GREETING 0}}"
+    silent: true
+  quack:
+    cmds:
+      - echo quack
+  run:
+    deps: [quack]
+    cmds:
+      - go run ./cmd/example
