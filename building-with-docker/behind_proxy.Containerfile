@@ -11,7 +11,6 @@ ARG GOENV="/root/.config/go/env"
 ARG GOPATH="/go"
 ARG GOPRIVATE=""
 
-ARG SSH_HOSTS="github.com,"
 ARG MAIN_PKG_PATH="."
 
 ARG HTTP_PROXY
