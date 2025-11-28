@@ -1,0 +1,61 @@
+# syntax=docker/dockerfile:1
+
+ARG TAG_GOVER="1.25.0"
+ARG TAG_DISTRO="bookworm"
+
+FROM docker.io/library/golang:${TAG_GOVER}-${TAG_DISTRO} AS builder
+
+ARG CGO_ENABLED="0"
+ARG GOCACHE="/root/.cache/go-build"
+ARG GOENV="/root/.config/go/env"
+ARG GOPATH="/go"
+ARG GOPRIVATE=""
+
+ARG GIT_SSH_HOSTS="github.com,"
+ARG MAIN_PKG_PATH="."
+
+RUN --mount=type=cache,target=/var/cache/apt,sharing=locked \
+    --mount=type=cache,target=/var/lib/apt,sharing=locked \ 
+<<EOF
+    rm -f /etc/apt/apt.conf.d/docker-clean
+    echo 'Binary::apt::APT::Keep-Downloaded-Packages "true";' > /etc/apt/apt.conf.d/keep-cache
+    apt-get update
+    apt-get install -yqq --no-install-recommends git-lfs openssh-client
+EOF
+
+RUN <<EOF
+    mkdir -p -m 0700 ~/.ssh 
+    for item in $(echo $GIT_SSH_HOSTS | tr ',' '\n' ); do
+      if [ ! -z ${item} ]; then
+        git config --global url."ssh://git@${item}".insteadOf https://${item}
+        ssh-keyscan ${item} >> ~/.ssh/known_hosts
+      fi
+    done
+EOF
+
+WORKDIR /app/src
+
+# https://docs.docker.com/build/building/context/#dockerignore-files
+# COPY . .
+
+RUN --mount=type=ssh \
+    --mount=type=secret,id=goenv,target=/root/.config/go/env \
+    --mount=type=cache,target=/go \
+    --mount=type=cache,target=/root/.cache/go-build \
+    --mount=type=bind,target=/app/src \
+<<EOF
+    go mod download
+    # go generate ./...
+    go build -o ../bin ${MAIN_PKG_PATH}
+EOF
+
+WORKDIR /app
+
+# arm64
+FROM gcr.io/distroless/static-debian12@sha256:ed92139a33080a51ac2e0607c781a67fb3facf2e6b3b04a2238703d8bcf39c40
+# amd64
+# FROM gcr.io/distroless/static-debian12@sha256:6ceafbc2a9c566d66448fb1d5381dede2b29200d1916e03f5238a1c437e7d9ea
+
+COPY --from=builder /app/bin /app/bin
+
+ENTRYPOINT [ "/app/bin" ]
