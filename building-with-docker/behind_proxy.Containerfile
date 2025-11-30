@@ -13,13 +13,6 @@ ARG GOPRIVATE=""
 
 ARG MAIN_PKG_PATH="."
 
-ARG HTTP_PROXY
-ARG HTTPS_PROXY=${HTTP_PROXY}
-ARG NO_PROXY 
-ARG http_proxy=${HTTP_PROXY}
-ARG https_proxy=${HTTP_PROXY}
-ARG no_proxy=${NO_PROXY}
-
 # for curl, etc.
 ARG SSL_CERT_FILE="/etc/ssl/certs/ca-certificates.crt"
 ARG NODE_EXTRA_CA_CERTS=${SSL_CERT_FILE}
@@ -28,6 +21,12 @@ ARG DENO_CERT=${SSL_CERT_FILE}
 RUN --mount=type=cache,target=/var/cache/apt,sharing=locked \
     --mount=type=cache,target=/var/lib/apt,sharing=locked \ 
     --mount=type=secret,id=certs,target=/etc/ssl/certs/ca-certificates.crt \
+    --mount=type=secret,id=HTTP_PROXY,env=HTTP_PROXY \
+    --mount=type=secret,id=HTTPS_PROXY,env=HTTPS_PROXY \
+    --mount=type=secret,id=NO_PROXY,env=NO_PROXY \
+    --mount=type=secret,id=http_proxy,env=http_proxy\
+    --mount=type=secret,id=https_proxy,env=https_proxy \
+    --mount=type=secret,id=no_proxy,env=no_proxy \
 <<EOF
     rm -f /etc/apt/apt.conf.d/docker-clean
     echo 'Binary::apt::APT::Keep-Downloaded-Packages "true";' > /etc/apt/apt.conf.d/keep-cache
@@ -39,10 +38,16 @@ WORKDIR /app/src
 
 RUN --mount=type=secret,id=netrc,target=/root/.netrc \
     --mount=type=secret,id=goenv,target=/root/.config/go/env \
-    --mount=type=secret,id=certs,target=/etc/ssl/certs/ca-certificates.crt \
     --mount=type=cache,target=/go \
     --mount=type=cache,target=/root/.cache/go-build \
     --mount=type=bind,target=/app/src \
+    --mount=type=secret,id=certs,target=/etc/ssl/certs/ca-certificates.crt \
+    --mount=type=secret,id=HTTP_PROXY,env=HTTP_PROXY \
+    --mount=type=secret,id=HTTPS_PROXY,env=HTTPS_PROXY \
+    --mount=type=secret,id=NO_PROXY,env=NO_PROXY \
+    --mount=type=secret,id=http_proxy,env=http_proxy\
+    --mount=type=secret,id=https_proxy,env=https_proxy \
+    --mount=type=secret,id=no_proxy,env=no_proxy \
 <<EOF
     go mod download
     # go generate ./...
@@ -51,10 +56,7 @@ EOF
 
 WORKDIR /app
 
-# arm64
-FROM gcr.io/distroless/static-debian12@sha256:ed92139a33080a51ac2e0607c781a67fb3facf2e6b3b04a2238703d8bcf39c40
-# amd64
-# FROM gcr.io/distroless/static-debian12@sha256:6ceafbc2a9c566d66448fb1d5381dede2b29200d1916e03f5238a1c437e7d9ea
+FROM gcr.io/distroless/static-debian12@sha256:6ceafbc2a9c566d66448fb1d5381dede2b29200d1916e03f5238a1c437e7d9ea
 
 COPY --from=builder /app/bin /app/bin
 

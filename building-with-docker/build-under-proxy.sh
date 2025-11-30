@@ -43,13 +43,30 @@ echo $arch
 # buildah sets 2 sec timeout for ssh-agent so you have low chance to successfully enter passphrase.
 ssh-add -T ~/.ssh/id_ecdsa.pub
 
+# this is really needed.
+export HTTP_PROXY=${HTTP_PROXY}
+export HTTPS_PROXY=${HTTPS_PROXY:-$HTTP_PROXY}
+# maybe being empty is ok.
+export NO_PROXY=${NO_PROXY:-""}
+export http_proxy=${http_proxy:-$HTTP_PROXY}
+export https_proxy=${https_proxy:-$HTTPS_PROXY}
+export no_proxy=${no_proxy:-$NO_PROXY}
+
 podman buildx build \
     --platform linux/${arch} \
     --build-arg TAG_GOVER=${TAG_GOVER} \
     --build-arg MAIN_PKG_PATH=${MAIN_PKG_PATH:-./} \
     --build-arg GOPRIVATE=${GOPRIVATE:-""} \
+    --secret id=netrc,src=${NETRC:-$HOME/.netrc} \
     --secret id=goenv,src=$(go env GOENV) \
-    --ssh default=${SSH_AUTH_SOCK:-""} \
+    --build-arg SSL_CERT_FILE=${SSL_CERT_FILE:-/etc/ssl/certs/ca-certificates.crt} \
+    --secret id=certs,src=${SSL_CERT_FILE:-/etc/ssl/certs/ca-certificates.crt} \
+    --secret id=HTTP_PROXY \
+    --secret id=HTTPS_PROXY \
+    --secret id=NO_PROXY \
+    --secret id=http_proxy \
+    --secret id=https_proxy \
+    --secret id=no_proxy \
     -t ${1}-${arch} \
     -f Containerfile \
     .
