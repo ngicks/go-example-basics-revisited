@@ -57,8 +57,8 @@ podman buildx build \
     --build-arg TAG_GOVER=${TAG_GOVER} \
     --build-arg MAIN_PKG_PATH=${MAIN_PKG_PATH:-./} \
     --build-arg GOPRIVATE=${GOPRIVATE:-""} \
-    --secret id=netrc,src=${NETRC:-$HOME/.netrc} \
     --secret id=goenv,src=$(go env GOENV) \
+    --secret id=netrc,src=${NETRC:-$HOME/.netrc} \
     --build-arg SSL_CERT_FILE=${SSL_CERT_FILE:-/etc/ssl/certs/ca-certificates.crt} \
     --secret id=certs,src=${SSL_CERT_FILE:-/etc/ssl/certs/ca-certificates.crt} \
     --secret id=HTTP_PROXY \
