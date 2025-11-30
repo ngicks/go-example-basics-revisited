@@ -22,8 +22,8 @@ ARG no_proxy=${NO_PROXY}
 
 # for curl, etc.
 ARG SSL_CERT_FILE="/etc/ssl/certs/ca-certificates.crt"
-ARG NODE_EXTRA_CA_CERTS="/etc/ssl/certs/ca-certificates.crt"
-ARG DENO_CERT="/etc/ssl/certs/ca-certificates.crt"
+ARG NODE_EXTRA_CA_CERTS=${SSL_CERT_FILE}
+ARG DENO_CERT=${SSL_CERT_FILE}
 
 RUN --mount=type=cache,target=/var/cache/apt,sharing=locked \
     --mount=type=cache,target=/var/lib/apt,sharing=locked \ 

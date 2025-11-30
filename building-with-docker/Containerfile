@@ -35,9 +35,6 @@ EOF
 
 WORKDIR /app/src
 
-# https://docs.docker.com/build/building/context/#dockerignore-files
-# COPY . .
-
 RUN --mount=type=ssh \
     --mount=type=secret,id=goenv,target=/root/.config/go/env \
     --mount=type=cache,target=/go \
