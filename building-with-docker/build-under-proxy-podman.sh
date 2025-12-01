@@ -38,11 +38,6 @@ fi
 
 echo $arch
 
-# let gpg key unlocked for ssh login.
-# As you can see in https://github.com/containers/buildah/blob/v1.42.1/pkg/sshagent/sshagent.go#L126-L131
-# buildah sets 2 sec timeout for ssh-agent so you have low chance to successfully enter passphrase.
-ssh-add -T ~/.ssh/id_ecdsa.pub
-
 # this is really needed.
 export HTTP_PROXY=${HTTP_PROXY}
 export HTTPS_PROXY=${HTTPS_PROXY:-$HTTP_PROXY}
@@ -59,14 +54,13 @@ podman buildx build \
     --build-arg GOPRIVATE=${GOPRIVATE:-""} \
     --secret id=goenv,src=$(go env GOENV) \
     --secret id=netrc,src=${NETRC:-$HOME/.netrc} \
-    --build-arg SSL_CERT_FILE=${SSL_CERT_FILE:-/etc/ssl/certs/ca-certificates.crt} \
     --secret id=certs,src=${SSL_CERT_FILE:-/etc/ssl/certs/ca-certificates.crt} \
-    --secret id=HTTP_PROXY \
-    --secret id=HTTPS_PROXY \
-    --secret id=NO_PROXY \
-    --secret id=http_proxy \
-    --secret id=https_proxy \
-    --secret id=no_proxy \
+    --build-arg HTTP_PROXY=${HTTP_PROXY} \
+    --build-arg HTTPS_PROXY=${HTTPS_PROXY} \
+    --build-arg NO_PROXY=${NO_PROXY} \
+    --build-arg http_proxy=${http_proxy} \
+    --build-arg https_proxy=${https_proxy} \
+    --build-arg no_proxy=${no_proxy} \
     -t ${1}-${arch} \
     -f Containerfile \
     .

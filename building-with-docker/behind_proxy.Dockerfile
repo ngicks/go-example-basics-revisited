@@ -18,16 +18,15 @@ ARG SSL_CERT_FILE="/etc/ssl/certs/ca-certificates.crt"
 ARG NODE_EXTRA_CA_CERTS=${SSL_CERT_FILE}
 ARG DENO_CERT=${SSL_CERT_FILE}
 
-ARG HTTP_PROXY
-ARG HTTPS_PROXY
-ARG NO_PROXY
-ARG http_proxy
-ARG https_proxy
-ARG no_proxy
-
 RUN --mount=type=cache,target=/var/cache/apt,sharing=locked \
     --mount=type=cache,target=/var/lib/apt,sharing=locked \ 
     --mount=type=secret,id=certs,target=/etc/ssl/certs/ca-certificates.crt \
+    --mount=type=secret,id=HTTP_PROXY,env=HTTP_PROXY \
+    --mount=type=secret,id=HTTPS_PROXY,env=HTTPS_PROXY \
+    --mount=type=secret,id=NO_PROXY,env=NO_PROXY \
+    --mount=type=secret,id=http_proxy,env=http_proxy\
+    --mount=type=secret,id=https_proxy,env=https_proxy \
+    --mount=type=secret,id=no_proxy,env=no_proxy \
 <<EOF
     rm -f /etc/apt/apt.conf.d/docker-clean
     echo 'Binary::apt::APT::Keep-Downloaded-Packages "true";' > /etc/apt/apt.conf.d/keep-cache
@@ -43,6 +42,12 @@ RUN --mount=type=secret,id=netrc,target=/root/.netrc \
     --mount=type=cache,target=/root/.cache/go-build \
     --mount=type=bind,target=/app/src \
     --mount=type=secret,id=certs,target=/etc/ssl/certs/ca-certificates.crt \
+    --mount=type=secret,id=HTTP_PROXY,env=HTTP_PROXY \
+    --mount=type=secret,id=HTTPS_PROXY,env=HTTPS_PROXY \
+    --mount=type=secret,id=NO_PROXY,env=NO_PROXY \
+    --mount=type=secret,id=http_proxy,env=http_proxy\
+    --mount=type=secret,id=https_proxy,env=https_proxy \
+    --mount=type=secret,id=no_proxy,env=no_proxy \
 <<EOF
     go mod download
     # go generate ./...
