@@ -62,5 +62,5 @@ docker buildx build \
     --secret id=https_proxy,type=env \
     --secret id=no_proxy,type=env \
     -t ${1}-${arch} \
-    -f Containerfile \
+    -f behind-proxy.Dockerfile \
     .

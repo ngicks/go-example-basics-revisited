@@ -1,0 +1,68 @@
+diff --git a/./building-with-docker/Containerfile b/./building-with-docker/behind_proxy.Containerfile
+index e39b829..7915ab1 100644
+--- a/./building-with-docker/Containerfile
++++ b/./building-with-docker/behind_proxy.Containerfile
+@@ -11,35 +11,38 @@ ARG GOENV="/root/.config/go/env"
+ ARG GOPATH="/go"
+ ARG GOPRIVATE=""
+ 
+-ARG GIT_SSH_HOSTS="github.com,"
+ ARG MAIN_PKG_PATH="."
+ 
++# for curl, etc.
++ARG SSL_CERT_FILE="/etc/ssl/certs/ca-certificates.crt"
++ARG NODE_EXTRA_CA_CERTS=${SSL_CERT_FILE}
++ARG DENO_CERT=${SSL_CERT_FILE}
++
++ARG HTTP_PROXY
++ARG HTTPS_PROXY
++ARG NO_PROXY
++ARG http_proxy
++ARG https_proxy
++ARG no_proxy
++
+ RUN --mount=type=cache,target=/var/cache/apt,sharing=locked \
+     --mount=type=cache,target=/var/lib/apt,sharing=locked \ 
++    --mount=type=secret,id=certs,target=/etc/ssl/certs/ca-certificates.crt \
+ <<EOF
+     rm -f /etc/apt/apt.conf.d/docker-clean
+     echo 'Binary::apt::APT::Keep-Downloaded-Packages "true";' > /etc/apt/apt.conf.d/keep-cache
+     apt-get update
+-    apt-get install -yqq --no-install-recommends git-lfs openssh-client
+-EOF
+-
+-RUN <<EOF
+-    mkdir -p -m 0700 ~/.ssh 
+-    for item in $(echo $GIT_SSH_HOSTS | tr ',' '\n' ); do
+-      if [ ! -z ${item} ]; then
+-        git config --global url."ssh://git@${item}".insteadOf https://${item}
+-        ssh-keyscan ${item} >> ~/.ssh/known_hosts
+-      fi
+-    done
++    apt-get install -yqq --no-install-recommends git-lfs
+ EOF
+ 
+ WORKDIR /app/src
+ 
+-RUN --mount=type=ssh \
++RUN --mount=type=secret,id=netrc,target=/root/.netrc \
+     --mount=type=secret,id=goenv,target=/root/.config/go/env \
+     --mount=type=cache,target=/go \
+     --mount=type=cache,target=/root/.cache/go-build \
+     --mount=type=bind,target=/app/src \
++    --mount=type=secret,id=certs,target=/etc/ssl/certs/ca-certificates.crt \
+ <<EOF
+     go mod download
+     # go generate ./...
+@@ -48,10 +51,7 @@ EOF
+ 
+ WORKDIR /app
+ 
+-# arm64
+-FROM gcr.io/distroless/static-debian12@sha256:ed92139a33080a51ac2e0607c781a67fb3facf2e6b3b04a2238703d8bcf39c40
+-# amd64
+-# FROM gcr.io/distroless/static-debian12@sha256:6ceafbc2a9c566d66448fb1d5381dede2b29200d1916e03f5238a1c437e7d9ea
++FROM gcr.io/distroless/static-debian12@sha256:6ceafbc2a9c566d66448fb1d5381dede2b29200d1916e03f5238a1c437e7d9ea
+ 
+ COPY --from=builder /app/bin /app/bin
+ 

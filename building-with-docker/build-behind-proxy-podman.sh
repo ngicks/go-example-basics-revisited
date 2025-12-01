@@ -62,5 +62,5 @@ podman buildx build \
     --build-arg https_proxy=${https_proxy} \
     --build-arg no_proxy=${no_proxy} \
     -t ${1}-${arch} \
-    -f Containerfile \
+    -f behind-proxy.Containerfile \
     .
